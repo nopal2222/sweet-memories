@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   
   <style>
-    /* CSS STYLE (SAMA SEPERTI SEBELUMNYA) */
+    /* CSS STYLE */
     :root { --primary: #ff8fa3; --secondary: #ffb3c1; --accent: #ff4d6d; --bg: #fff0f3; --glass: rgba(255, 255, 255, 0.7); --glass-border: rgba(255, 255, 255, 0.8); --text: #590d22; }
     * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
     body { font-family: 'Outfit', sans-serif; background-color: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; }
@@ -19,7 +19,22 @@
     
     header { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
     h1 { font-family: 'Dancing Script', cursive; font-size: 4.5rem; background: linear-gradient(45deg, #e01e37, #ff4d6d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; animation: fadeInDown 1.2s ease; }
-    header p { font-size: 1.2rem; color: #800f2f; max-width: 500px; margin-bottom: 40px; animation: fadeInUp 1.2s ease 0.5s forwards; opacity: 0; }
+    header p { font-size: 1.2rem; color: #800f2f; max-width: 500px; margin-bottom: 30px; animation: fadeInUp 1.2s ease 0.5s forwards; opacity: 0; }
+    
+    /* DAYS COUNTER STYLE */
+    .days-box {
+      background: rgba(255, 255, 255, 0.6);
+      padding: 15px 35px;
+      border-radius: 50px;
+      border: 2px solid #fff;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 20px rgba(255, 77, 109, 0.15);
+      animation: fadeInUp 1.2s ease 0.8s forwards; 
+      opacity: 0;
+    }
+    .days-box span { font-size: 2.5rem; font-weight: 700; color: var(--accent); display: block; line-height: 1; }
+    .days-box small { font-size: 1rem; color: #800f2f; font-weight: 500; }
+
     .btn-scroll { width: 50px; height: 80px; border: 2px solid var(--accent); border-radius: 25px; position: relative; cursor: pointer; opacity: 0; animation: fadeInUp 1.2s ease 1s forwards; }
     .btn-scroll::before { content: ''; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: scrollWheel 2s infinite; }
     @keyframes scrollWheel { 0% { top: 10px; opacity: 1; } 100% { top: 50px; opacity: 0; } }
@@ -40,8 +55,25 @@
     .photo-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
     .photo-card:hover img { transform: scale(1.1); }
 
-    /* UPLOAD UI */
-    .upload-section { text-align: center; margin-top: 30px; padding: 20px; border-top: 2px dashed rgba(255, 77, 109, 0.3); }
+    /* TOMBOL DELETE (SAMPAH) */
+    .btn-delete {
+      position: absolute; top: 10px; right: 10px;
+      background: red; color: white; border: none;
+      width: 35px; height: 35px; border-radius: 50%;
+      cursor: pointer; display: none; /* Default Hidden */
+      z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      align-items: center; justify-content: center;
+      transition: transform 0.2s;
+    }
+    .btn-delete:hover { transform: scale(1.2); }
+    /* Munculkan tombol jika body punya class admin-mode */
+    body.admin-mode .btn-delete { display: flex; }
+
+    /* UPLOAD UI - HIDDEN BY DEFAULT */
+    .upload-section { 
+      display: none; 
+      text-align: center; margin-top: 30px; padding: 20px; border-top: 2px dashed rgba(255, 77, 109, 0.3); 
+    }
     #file-upload { display: none; }
     .custom-file-upload { 
       background: var(--secondary); color: white; padding: 12px 30px; border-radius: 50px; 
@@ -49,7 +81,6 @@
     }
     .custom-file-upload:hover { background: var(--accent); transform: scale(1.05); }
     
-    /* Dropdown Styling */
     .category-select {
       padding: 10px 20px; border-radius: 20px; border: 2px solid var(--secondary);
       background: rgba(255,255,255,0.9); color: var(--text); font-family: 'Outfit', sans-serif;
@@ -57,6 +88,13 @@
     }
 
     #loading-text { display: none; color: var(--accent); margin-top: 15px; font-weight: bold; }
+
+    /* Admin Button */
+    .btn-admin-login {
+      display: block; margin: 0 auto; margin-top: 20px;
+      background: transparent; border: 1px solid var(--accent); color: var(--accent);
+      padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;
+    }
 
     /* Lightbox & WA */
     .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
@@ -83,6 +121,13 @@
   <header>
     <h1>Sweet Memories <i class="fas fa-heart" style="font-size: 0.6em; color: var(--accent);"></i></h1>
     <p>Karena setiap momen bersamamu layak untuk diabadikan selamanya.</p>
+    
+    <!-- FITUR DAYS COUNTER DISINI -->
+    <div class="days-box">
+      <span id="days-count">0</span>
+      <small>Hari Bersama</small>
+    </div>
+
     <div class="btn-scroll" onclick="document.getElementById('content').scrollIntoView({behavior:'smooth'})"></div>
   </header>
 
@@ -99,30 +144,24 @@
 
       <!-- 1. GALLERY KITA BERDUA (SHARED) -->
       <div class="gallery-grid active" id="shared-gallery">
-        <!-- Foto dari Database kategori 'shared' muncul disini -->
         <p id="empty-msg" style="grid-column:1/-1; text-align:center; display:none;">Belum ada foto baru nih...</p>
       </div>
 
       <!-- 2. GALLERY FOTO LAMA (STATIC) -->
       <div class="gallery-grid" id="static-gallery">
-        <!-- Foto Hardcoded -->
         <div class="photo-card" onclick="openLightbox(this.querySelector('img').src)"><img src="images/poto1.JPG" alt="Static"></div>
         <div class="photo-card" onclick="openLightbox(this.querySelector('img').src)"><img src="images/dufan1.JPG" alt="Static"></div>
-        <!-- Foto Database kategori 'static' akan nambah otomatis di sini -->
       </div>
 
       <!-- 3. GALLERY RAHASIA (SECRET) -->
       <div class="gallery-grid" id="secret-gallery">
-        <!-- Foto Hardcoded -->
         <div class="photo-card" onclick="openLightbox(this.querySelector('img').src)"><img src="images/foto1.jpeg" alt="Secret"></div>
-        <!-- Foto Database kategori 'secret' akan nambah otomatis di sini -->
       </div>
 
-      <!-- UPLOAD SECTION -->
+      <!-- UPLOAD SECTION (HIDDEN INITIALLY) -->
       <div class="upload-section" id="upload-ui">
-        <p style="margin-bottom: 10px; color: #800f2f;">Tambah Kenangan Baru</p>
+        <p style="margin-bottom: 10px; color: #800f2f; font-weight: bold;">👑 Mode Admin: Tambah & Hapus Kenangan</p>
         
-        <!-- Pilihan Kategori -->
         <select id="category-select" class="category-select">
           <option value="shared">Upload ke: Kita Berdua ☁️</option>
           <option value="static">Upload ke: Foto Lama 📷</option>
@@ -137,6 +176,9 @@
         
         <div id="loading-text">Sedang mengupload ke awan... ☁️</div>
       </div>
+      
+      <!-- TOMBOL LOGIN ADMIN -->
+      <button class="btn-admin-login" onclick="adminLogin()"><i class="fas fa-user-lock"></i> Admin Login</button>
 
     </div>
 
@@ -158,10 +200,11 @@
     <img id="lightbox-img" src="" alt="Full Preview">
   </div>
 
+  <!-- SCRIPT FIREBASE & LOGIC UTAMA -->
   <script type="module">
-    // 1. IMPORT FIREBASE
+    // 1. IMPORT FIREBASE (Termasuk fitur 'remove')
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
     // 2. CONFIG FIREBASE
     const firebaseConfig = {
@@ -179,7 +222,7 @@
     const db = getDatabase(app);
     const photosRef = ref(db, 'photos');
 
-    // 4. LOGIC UPLOAD DENGAN KATEGORI
+    // 4. LOGIC UPLOAD
     const fileInput = document.getElementById('file-upload');
     const categorySelect = document.getElementById('category-select');
     const loadingText = document.getElementById('loading-text');
@@ -187,11 +230,10 @@
     if(fileInput) {
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
-            const selectedCategory = categorySelect.value; // Ambil pilihan kategori
+            const selectedCategory = categorySelect.value; 
 
             if (!file) return;
 
-            // Cek ukuran file (Maksimal 1 MB)
             if (file.size > 1024 * 1024) {
                 alert("⚠️ File terlalu besar! Pilih foto di bawah 1 MB ya sayang.");
                 this.value = ""; 
@@ -206,14 +248,14 @@
             reader.onload = function(event) {
                 const base64String = event.target.result;
 
-                // Simpan ke Firebase dengan data kategori
                 push(photosRef, {
                     url: base64String,
-                    category: selectedCategory, // Simpan kategori
+                    category: selectedCategory, 
                     timestamp: Date.now()
                 }).then(() => {
                     alert("✅ Berhasil Upload!");
                     loadingText.style.display = 'none';
+                    fileInput.value = "";
                 }).catch((error) => {
                     console.error(error);
                     alert("Gagal simpan: " + error.message);
@@ -225,28 +267,37 @@
         });
     }
 
-    // 5. MENAMPILKAN FOTO SESUAI KATEGORI
+    // 5. MENAMPILKAN FOTO & TOMBOL DELETE
     onValue(photosRef, (snapshot) => {
       const data = snapshot.val();
       
-      // Hapus hanya elemen yang ditambahkan lewat database (biar yg hardcoded gak ilang)
+      // Hapus foto dynamic lama agar tidak duplikat
       document.querySelectorAll('.dynamic-photo').forEach(el => el.remove());
 
       if (data) {
-        const photoArray = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+        // Kita ubah object jadi array tapi tetap simpan KEY (ID) nya
+        const photoArray = Object.entries(data).map(([key, value]) => ({
+            id: key, // ID ini penting untuk menghapus
+            ...value
+        })).sort((a, b) => b.timestamp - a.timestamp);
 
         photoArray.forEach(item => {
             const div = document.createElement('div');
-            div.className = 'photo-card dynamic-photo'; // Kasih tanda 'dynamic'
-            div.onclick = function() { window.openLightbox(item.url) };
-            div.innerHTML = `<img src="${item.url}" alt="Kenangan" style="width:100%; height:100%; object-fit:cover;">`;
+            div.className = 'photo-card dynamic-photo';
             
-            // Logika Pemilahan
-            const cat = item.category || 'shared'; // Kalau data lama ga ada kategori, anggap 'shared'
+            // Masukkan HTML Gambar DAN Tombol Delete
+            // Tombol delete memanggil fungsi window.deletePhoto(ID)
+            div.innerHTML = `
+                <img src="${item.url}" alt="Kenangan" onclick="window.openLightbox('${item.url}')">
+                <button class="btn-delete" onclick="window.deletePhoto('${item.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            
+            const cat = item.category || 'shared';
             
             if (cat === 'shared') {
                 document.getElementById('shared-gallery').appendChild(div);
-                // Sembunyikan pesan kosong jika ada foto
                 const emptyMsg = document.getElementById('empty-msg');
                 if(emptyMsg) emptyMsg.style.display = 'none';
             } 
@@ -263,7 +314,25 @@
       }
     });
 
-    // 6. FUNGSI GANTI TAB
+    // 6. FUNGSI DELETE (Diakses Global)
+    window.deletePhoto = function(photoId) {
+        // Cek apakah admin sudah login (cek class di body)
+        if(!document.body.classList.contains('admin-mode')) {
+            alert("Eits! Cuma admin yang boleh hapus 😝");
+            return;
+        }
+
+        if(confirm("Yakin mau hapus kenangan ini selamanya? 🥺")) {
+            const itemRef = ref(db, 'photos/' + photoId);
+            remove(itemRef).then(() => {
+                alert("Foto berhasil dihapus!");
+            }).catch((error) => {
+                alert("Gagal hapus: " + error.message);
+            });
+        }
+    }
+
+    // Fungsi Tab Helper
     window.switchTab = function(tabName) {
       document.querySelectorAll('.gallery-grid').forEach(g => g.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -271,18 +340,30 @@
       if(tabName === 'shared') {
         document.getElementById('shared-gallery').classList.add('active');
         document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
-        // Upload selalu muncul di semua tab atau hanya shared?
-        // User minta bisa nambah di semua tab, jadi biarkan upload UI tetap muncul
-        document.getElementById('upload-ui').style.display = 'block';
       } else if (tabName === 'static') {
         document.getElementById('static-gallery').classList.add('active');
         document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
-        document.getElementById('upload-ui').style.display = 'block'; // Tetap munculkan upload
       }
     }
   </script>
 
   <script>
+    // --- KONFIGURASI TANGGAL JADIAN DI SINI ---
+    const startDate = new Date("2025-02-25"); 
+    // ------------------------------------------
+
+    function updateCounter() {
+      const now = new Date();
+      const diff = now - startDate;
+      // Hitung hari (jika tanggal masa depan, hasilnya negatif/0)
+      let days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      if (days < 0) days = 0; // Biar ga minus kalau belum waktunya
+      
+      document.getElementById('days-count').innerText = days;
+    }
+    updateCounter();
+
+    // FUNGSI UMUM (Lightbox, dll)
     function openLightbox(src) {
       document.getElementById('lightbox-img').src = src;
       document.getElementById('lightbox').classList.add('active');
@@ -295,22 +376,37 @@
     }, { threshold: 0.1 });
     document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
 
+    // KUNCI GALERI RAHASIA
     window.unlockSecret = function(btn) {
-      const pass = prompt("Password: (kita)");
-      if(pass === 'kita') {
+      const pass = prompt("Password Galeri Rahasia:");
+      if(pass === 'kita') { 
         document.querySelectorAll('.gallery-grid').forEach(g => g.classList.remove('active'));
         document.getElementById('secret-gallery').classList.add('active');
         btn.innerHTML = '🔓 Terbuka';
-        // Biarkan UI upload tetap ada supaya bisa upload ke rahasia
-        document.getElementById('upload-ui').style.display = 'block';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      } else if (pass) {
+        alert("Salah password :(");
       }
     }
-
-    window.sendToWA = function() {
-      const msg = document.getElementById('waMessage').value;
-      const phone = "6285156413049"; 
-      if(msg) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    // LOGIN ADMIN (Password untuk Upload & Delete)
+    window.adminLogin = function() {
+        const pass = prompt("Masukkan Password Admin:");
+        if (pass === "admin123") { 
+            // 1. Munculkan menu upload
+            document.getElementById('upload-ui').style.display = 'block';
+            // 2. Hilangkan tombol login
+            document.querySelector('.btn-admin-login').style.display = 'none'; 
+            // 3. AKTIFKAN MODE ADMIN (Munculkan tombol sampah)
+            document.body.classList.add('admin-mode');
+            
+            alert("Mode Admin Aktif! Sekarang kamu bisa Upload & Hapus Foto.");
+        } else {
+            alert("Password Admin Salah!");
+        }
     }
+
   </script>
 </body>
 </html>
