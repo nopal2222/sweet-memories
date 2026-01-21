@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   
   <style>
-    /* CSS STYLE SAMA (Dipersingkat) */
+    /* CSS STYLE (SAMA SEPERTI SEBELUMNYA) */
     :root { --primary: #ff8fa3; --secondary: #ffb3c1; --accent: #ff4d6d; --bg: #fff0f3; --glass: rgba(255, 255, 255, 0.7); --glass-border: rgba(255, 255, 255, 0.8); --text: #590d22; }
     * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
     body { font-family: 'Outfit', sans-serif; background-color: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; }
@@ -49,6 +49,13 @@
     }
     .custom-file-upload:hover { background: var(--accent); transform: scale(1.05); }
     
+    /* Dropdown Styling */
+    .category-select {
+      padding: 10px 20px; border-radius: 20px; border: 2px solid var(--secondary);
+      background: rgba(255,255,255,0.9); color: var(--text); font-family: 'Outfit', sans-serif;
+      margin-bottom: 15px; outline: none; cursor: pointer;
+    }
+
     #loading-text { display: none; color: var(--accent); margin-top: 15px; font-weight: bold; }
 
     /* Lightbox & WA */
@@ -90,29 +97,41 @@
         <button class="tab-btn lock" onclick="unlockSecret(this)"><i class="fas fa-lock"></i> Rahasia</button>
       </div>
 
-      <!-- GALLERY DATABASE -->
+      <!-- 1. GALLERY KITA BERDUA (SHARED) -->
       <div class="gallery-grid active" id="shared-gallery">
-        <!-- Foto dari Database muncul disini -->
+        <!-- Foto dari Database kategori 'shared' muncul disini -->
         <p id="empty-msg" style="grid-column:1/-1; text-align:center; display:none;">Belum ada foto baru nih...</p>
       </div>
 
-      <!-- GALLERY STATIC -->
+      <!-- 2. GALLERY FOTO LAMA (STATIC) -->
       <div class="gallery-grid" id="static-gallery">
+        <!-- Foto Hardcoded -->
         <div class="photo-card" onclick="openLightbox(this.querySelector('img').src)"><img src="images/poto1.JPG" alt="Static"></div>
         <div class="photo-card" onclick="openLightbox(this.querySelector('img').src)"><img src="images/dufan1.JPG" alt="Static"></div>
+        <!-- Foto Database kategori 'static' akan nambah otomatis di sini -->
       </div>
 
-      <!-- GALLERY RAHASIA -->
+      <!-- 3. GALLERY RAHASIA (SECRET) -->
       <div class="gallery-grid" id="secret-gallery">
+        <!-- Foto Hardcoded -->
         <div class="photo-card" onclick="openLightbox(this.querySelector('img').src)"><img src="images/foto1.jpeg" alt="Secret"></div>
+        <!-- Foto Database kategori 'secret' akan nambah otomatis di sini -->
       </div>
 
       <!-- UPLOAD SECTION -->
       <div class="upload-section" id="upload-ui">
-        <p style="margin-bottom: 15px; color: #800f2f;">Tambah foto baru (Otomatis masuk ke HP kita berdua)</p>
+        <p style="margin-bottom: 10px; color: #800f2f;">Tambah Kenangan Baru</p>
         
+        <!-- Pilihan Kategori -->
+        <select id="category-select" class="category-select">
+          <option value="shared">Upload ke: Kita Berdua ☁️</option>
+          <option value="static">Upload ke: Foto Lama 📷</option>
+          <option value="secret">Upload ke: Rahasia 🔒</option>
+        </select>
+        <br>
+
         <label for="file-upload" class="custom-file-upload">
-          <i class="fas fa-cloud-upload-alt"></i> Upload Foto
+          <i class="fas fa-cloud-upload-alt"></i> Pilih Foto
         </label>
         <input id="file-upload" type="file" accept="image/*" />
         
@@ -139,17 +158,12 @@
     <img id="lightbox-img" src="" alt="Full Preview">
   </div>
 
-  <!-- SCRIPT -->
-  <!-- SCRIPT UTAMA (GABUNGAN) -->
- <!-- SCRIPT DETEKSI ERROR -->
- <!-- SCRIPT FINAL - PERBAIKAN TAMPILAN -->
-  <!-- SCRIPT FINAL - VERSI ANTI BLOKIR (BASE64) -->
   <script type="module">
     // 1. IMPORT FIREBASE
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
     import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-    // 2. CONFIG FIREBASE (Punya Kamu)
+    // 2. CONFIG FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyBMVHWj3DC4ldqtEBOrTCKIuX0KSIAMeuw",
       authDomain: "sweet-memory-v2.firebaseapp.com",
@@ -165,37 +179,40 @@
     const db = getDatabase(app);
     const photosRef = ref(db, 'photos');
 
-    // 4. LOGIC UPLOAD TANPA IMGBB (LANGSUNG KE DATABASE)
+    // 4. LOGIC UPLOAD DENGAN KATEGORI
     const fileInput = document.getElementById('file-upload');
+    const categorySelect = document.getElementById('category-select');
     const loadingText = document.getElementById('loading-text');
 
     if(fileInput) {
         fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
+            const selectedCategory = categorySelect.value; // Ambil pilihan kategori
+
             if (!file) return;
 
-            // Cek ukuran file (Maksimal 1 MB biar database gak berat)
+            // Cek ukuran file (Maksimal 1 MB)
             if (file.size > 1024 * 1024) {
                 alert("⚠️ File terlalu besar! Pilih foto di bawah 1 MB ya sayang.");
-                this.value = ""; // Reset input
+                this.value = ""; 
                 return;
             }
 
             loadingText.style.display = 'block';
-            loadingText.innerText = "Sedang memproses foto... 🔄";
+            loadingText.innerText = `Sedang upload ke album '${selectedCategory}'... 🔄`;
 
-            // Ubah Foto jadi Kode Teks (Base64)
             const reader = new FileReader();
             
             reader.onload = function(event) {
                 const base64String = event.target.result;
 
-                // Simpan kode teks foto ke Firebase
+                // Simpan ke Firebase dengan data kategori
                 push(photosRef, {
                     url: base64String,
+                    category: selectedCategory, // Simpan kategori
                     timestamp: Date.now()
                 }).then(() => {
-                    alert("✅ Berhasil Upload! Fotonya aman sekarang.");
+                    alert("✅ Berhasil Upload!");
                     loadingText.style.display = 'none';
                 }).catch((error) => {
                     console.error(error);
@@ -204,33 +221,45 @@
                 });
             };
 
-            reader.readAsDataURL(file); // Mulai proses ubah foto
+            reader.readAsDataURL(file); 
         });
     }
 
-    // 5. MENAMPILKAN FOTO
+    // 5. MENAMPILKAN FOTO SESUAI KATEGORI
     onValue(photosRef, (snapshot) => {
-      const gallery = document.getElementById('shared-gallery');
       const data = snapshot.val();
       
-      gallery.innerHTML = ''; // Bersihkan galeri lama
+      // Hapus hanya elemen yang ditambahkan lewat database (biar yg hardcoded gak ilang)
+      document.querySelectorAll('.dynamic-photo').forEach(el => el.remove());
 
       if (data) {
-        // Urutkan dari yang terbaru
         const photoArray = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
 
         photoArray.forEach(item => {
             const div = document.createElement('div');
-            div.className = 'photo-card';
-            
-            // Trik agar function window.openLightbox bisa akses data ini
+            div.className = 'photo-card dynamic-photo'; // Kasih tanda 'dynamic'
             div.onclick = function() { window.openLightbox(item.url) };
-            
             div.innerHTML = `<img src="${item.url}" alt="Kenangan" style="width:100%; height:100%; object-fit:cover;">`;
-            gallery.appendChild(div);
+            
+            // Logika Pemilahan
+            const cat = item.category || 'shared'; // Kalau data lama ga ada kategori, anggap 'shared'
+            
+            if (cat === 'shared') {
+                document.getElementById('shared-gallery').appendChild(div);
+                // Sembunyikan pesan kosong jika ada foto
+                const emptyMsg = document.getElementById('empty-msg');
+                if(emptyMsg) emptyMsg.style.display = 'none';
+            } 
+            else if (cat === 'static') {
+                document.getElementById('static-gallery').appendChild(div);
+            } 
+            else if (cat === 'secret') {
+                document.getElementById('secret-gallery').appendChild(div);
+            }
         });
       } else {
-        gallery.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:20px; color:#888;">Belum ada foto baru nih...</p>';
+         const emptyMsg = document.getElementById('empty-msg');
+         if(emptyMsg) emptyMsg.style.display = 'block';
       }
     });
 
@@ -242,17 +271,18 @@
       if(tabName === 'shared') {
         document.getElementById('shared-gallery').classList.add('active');
         document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+        // Upload selalu muncul di semua tab atau hanya shared?
+        // User minta bisa nambah di semua tab, jadi biarkan upload UI tetap muncul
         document.getElementById('upload-ui').style.display = 'block';
       } else if (tabName === 'static') {
         document.getElementById('static-gallery').classList.add('active');
         document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
-        document.getElementById('upload-ui').style.display = 'none';
+        document.getElementById('upload-ui').style.display = 'block'; // Tetap munculkan upload
       }
     }
   </script>
 
   <script>
-    // STANDARD UI SCRIPTS
     function openLightbox(src) {
       document.getElementById('lightbox-img').src = src;
       document.getElementById('lightbox').classList.add('active');
@@ -271,13 +301,14 @@
         document.querySelectorAll('.gallery-grid').forEach(g => g.classList.remove('active'));
         document.getElementById('secret-gallery').classList.add('active');
         btn.innerHTML = '🔓 Terbuka';
-        document.getElementById('upload-ui').style.display = 'none';
+        // Biarkan UI upload tetap ada supaya bisa upload ke rahasia
+        document.getElementById('upload-ui').style.display = 'block';
       }
     }
 
     window.sendToWA = function() {
       const msg = document.getElementById('waMessage').value;
-      const phone = "6285156413049"; // GANTI NOMOR
+      const phone = "6285156413049"; 
       if(msg) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
     }
   </script>
