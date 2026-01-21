@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Our Sweet Journey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <style>
+    /* CSS STYLE SAMA (Dipersingkat) */
+    :root { --primary: #ff8fa3; --secondary: #ffb3c1; --accent: #ff4d6d; --bg: #fff0f3; --glass: rgba(255, 255, 255, 0.7); --glass-border: rgba(255, 255, 255, 0.8); --text: #590d22; }
+    * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+    body { font-family: 'Outfit', sans-serif; background-color: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; }
+    .blob { position: absolute; filter: blur(50px); z-index: -1; opacity: 0.6; animation: float 10s infinite alternate; }
+    .blob-1 { width: 300px; height: 300px; background: #ffccd5; top: 0; left: -50px; border-radius: 40% 60% 70% 30%; }
+    .blob-2 { width: 400px; height: 400px; background: #c9184a; top: 50%; right: -100px; border-radius: 60% 40% 30% 70%; opacity: 0.15; animation-delay: -2s; }
+    @keyframes float { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(20px, 40px) rotate(10deg); } }
+    
+    header { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+    h1 { font-family: 'Dancing Script', cursive; font-size: 4.5rem; background: linear-gradient(45deg, #e01e37, #ff4d6d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; animation: fadeInDown 1.2s ease; }
+    header p { font-size: 1.2rem; color: #800f2f; max-width: 500px; margin-bottom: 40px; animation: fadeInUp 1.2s ease 0.5s forwards; opacity: 0; }
+    .btn-scroll { width: 50px; height: 80px; border: 2px solid var(--accent); border-radius: 25px; position: relative; cursor: pointer; opacity: 0; animation: fadeInUp 1.2s ease 1s forwards; }
+    .btn-scroll::before { content: ''; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: scrollWheel 2s infinite; }
+    @keyframes scrollWheel { 0% { top: 10px; opacity: 1; } 100% { top: 50px; opacity: 0; } }
+
+    .container { max-width: 1000px; margin: 0 auto; padding: 50px 20px; }
+    .glass-card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: 30px; padding: 40px; margin-bottom: 50px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+    .glass-card.visible { opacity: 1; transform: translateY(0); }
+    h2 { font-size: 2.2rem; margin-bottom: 20px; color: #a4133c; text-align: center; }
+
+    .tabs { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
+    .tab-btn { padding: 10px 24px; border-radius: 50px; border: none; background: rgba(255,255,255,0.6); color: var(--accent); font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+    .tab-btn:hover, .tab-btn.active { background: var(--accent); color: white; transform: translateY(-3px); }
+    .tab-btn.lock { background: linear-gradient(135deg, #2b2d42, #495057); color: white; }
+
+    .gallery-grid { display: none; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; animation: fadeIn 0.5s ease; }
+    .gallery-grid.active { display: grid; }
+    .photo-card { position: relative; border-radius: 15px; overflow: hidden; aspect-ratio: 3/4; cursor: zoom-in; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .photo-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+    .photo-card:hover img { transform: scale(1.1); }
+
+    /* UPLOAD UI */
+    .upload-section { text-align: center; margin-top: 30px; padding: 20px; border-top: 2px dashed rgba(255, 77, 109, 0.3); }
+    #file-upload { display: none; }
+    .custom-file-upload { 
+      background: var(--secondary); color: white; padding: 12px 30px; border-radius: 50px; 
+      cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; transition: 0.3s; 
+    }
+    .custom-file-upload:hover { background: var(--accent); transform: scale(1.05); }
+    
+    #loading-text { display: none; color: var(--accent); margin-top: 15px; font-weight: bold; }
+
+    /* Lightbox & WA */
+    .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+    .lightbox.active { opacity: 1; pointer-events: all; }
+    .lightbox img { max-width: 90%; max-height: 90vh; border-radius: 10px; transform: scale(0.9); transition: transform 0.3s ease; }
+    .lightbox.active img { transform: scale(1); }
+    .close-lightbox { position: absolute; top: 20px; right: 30px; font-size: 3rem; color: white; cursor: pointer; }
+    
+    .wa-form-container { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .wa-textarea { width: 100%; max-width: 500px; padding: 15px; border-radius: 15px; border: 2px solid var(--secondary); outline: none; transition: 0.3s; resize: none; background: rgba(255,255,255,0.9); }
+    .btn-wa { padding: 12px 35px; background: #25D366; color: white; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 10px; }
+    
+    footer { text-align: center; padding: 40px; color: #800f2f; }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <header>
+    <h1>Sweet Memories <i class="fas fa-heart" style="font-size: 0.6em; color: var(--accent);"></i></h1>
+    <p>Karena setiap momen bersamamu layak untuk diabadikan selamanya.</p>
+    <div class="btn-scroll" onclick="document.getElementById('content').scrollIntoView({behavior:'smooth'})"></div>
+  </header>
+
+  <section class="container" id="content">
+    
+    <div class="glass-card scroll-reveal">
+      <h2><i class="fas fa-images"></i> Galeri Kenangan</h2>
+      
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('shared')"><i class="fas fa-cloud"></i> Kita Berdua</button>
+        <button class="tab-btn" onclick="switchTab('static')">Foto Lama</button>
+        <button class="tab-btn lock" onclick="unlockSecret(this)"><i class="fas fa-lock"></i> Rahasia</button>
+      </div>
+
+      <!-- GALLERY DATABASE -->
+      <div class="gallery-grid active" id="shared-gallery">
+        <!-- Foto dari Database muncul disini -->
+        <p id="empty-msg" style="grid-column:1/-1; text-align:center; display:none;">Belum ada foto baru nih...</p>
+      </div>
+
+      <!-- GALLERY STATIC -->
+      <div class="gallery-grid" id="static-gallery">
+        <div class="photo-card" onclick="openLightbox(this.querySelector('img').src)"><img src="images/poto1.JPG" alt="Static"></div>
+        <div class="photo-card" onclick="openLightbox(this.querySelector('img').src)"><img src="images/dufan1.JPG" alt="Static"></div>
+      </div>
+
+      <!-- GALLERY RAHASIA -->
+      <div class="gallery-grid" id="secret-gallery">
+        <div class="photo-card" onclick="openLightbox(this.querySelector('img').src)"><img src="images/foto1.jpeg" alt="Secret"></div>
+      </div>
+
+      <!-- UPLOAD SECTION -->
+      <div class="upload-section" id="upload-ui">
+        <p style="margin-bottom: 15px; color: #800f2f;">Tambah foto baru (Otomatis masuk ke HP kita berdua)</p>
+        
+        <label for="file-upload" class="custom-file-upload">
+          <i class="fas fa-cloud-upload-alt"></i> Upload Foto
+        </label>
+        <input id="file-upload" type="file" accept="image/*" />
+        
+        <div id="loading-text">Sedang mengupload ke awan... ☁️</div>
+      </div>
+
+    </div>
+
+    <!-- WhatsApp Form -->
+    <div class="glass-card scroll-reveal">
+      <h2><i class="fas fa-paper-plane"></i> Kirim Pesan</h2>
+      <div class="wa-form-container">
+        <textarea id="waMessage" class="wa-textarea" rows="4" placeholder="Tulis pesan..."></textarea>
+        <button class="btn-wa" onclick="sendToWA()"><i class="fab fa-whatsapp"></i> Kirim WA</button>
+      </div>
+    </div>
+
+  </section>
+
+  <footer>Made with <i class="fas fa-heart" style="color: var(--accent);"></i></footer>
+
+  <div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+    <span class="close-lightbox">&times;</span>
+    <img id="lightbox-img" src="" alt="Full Preview">
+  </div>
+
+  <!-- SCRIPT -->
+  <!-- SCRIPT UTAMA (GABUNGAN) -->
+ <!-- SCRIPT DETEKSI ERROR -->
+ <!-- SCRIPT FINAL - PERBAIKAN TAMPILAN -->
+  <!-- SCRIPT FINAL - VERSI ANTI BLOKIR (BASE64) -->
+  <script type="module">
+    // 1. IMPORT FIREBASE
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+    // 2. CONFIG FIREBASE (Punya Kamu)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBMVHWj3DC4ldqtEBOrTCKIuX0KSIAMeuw",
+      authDomain: "sweet-memory-v2.firebaseapp.com",
+      databaseURL: "https://sweet-memory-v2-default-rtdb.firebaseio.com",
+      projectId: "sweet-memory-v2",
+      storageBucket: "sweet-memory-v2.firebasestorage.app",
+      messagingSenderId: "725927009084",
+      appId: "1:725927009084:web:bff9a2a702ad30ce3f5c39"
+    };
+
+    // 3. MULAI APLIKASI
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const photosRef = ref(db, 'photos');
+
+    // 4. LOGIC UPLOAD TANPA IMGBB (LANGSUNG KE DATABASE)
+    const fileInput = document.getElementById('file-upload');
+    const loadingText = document.getElementById('loading-text');
+
+    if(fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Cek ukuran file (Maksimal 1 MB biar database gak berat)
+            if (file.size > 1024 * 1024) {
+                alert("⚠️ File terlalu besar! Pilih foto di bawah 1 MB ya sayang.");
+                this.value = ""; // Reset input
+                return;
+            }
+
+            loadingText.style.display = 'block';
+            loadingText.innerText = "Sedang memproses foto... 🔄";
+
+            // Ubah Foto jadi Kode Teks (Base64)
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const base64String = event.target.result;
+
+                // Simpan kode teks foto ke Firebase
+                push(photosRef, {
+                    url: base64String,
+                    timestamp: Date.now()
+                }).then(() => {
+                    alert("✅ Berhasil Upload! Fotonya aman sekarang.");
+                    loadingText.style.display = 'none';
+                }).catch((error) => {
+                    console.error(error);
+                    alert("Gagal simpan: " + error.message);
+                    loadingText.style.display = 'none';
+                });
+            };
+
+            reader.readAsDataURL(file); // Mulai proses ubah foto
+        });
+    }
+
+    // 5. MENAMPILKAN FOTO
+    onValue(photosRef, (snapshot) => {
+      const gallery = document.getElementById('shared-gallery');
+      const data = snapshot.val();
+      
+      gallery.innerHTML = ''; // Bersihkan galeri lama
+
+      if (data) {
+        // Urutkan dari yang terbaru
+        const photoArray = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+
+        photoArray.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'photo-card';
+            
+            // Trik agar function window.openLightbox bisa akses data ini
+            div.onclick = function() { window.openLightbox(item.url) };
+            
+            div.innerHTML = `<img src="${item.url}" alt="Kenangan" style="width:100%; height:100%; object-fit:cover;">`;
+            gallery.appendChild(div);
+        });
+      } else {
+        gallery.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:20px; color:#888;">Belum ada foto baru nih...</p>';
+      }
+    });
+
+    // 6. FUNGSI GANTI TAB
+    window.switchTab = function(tabName) {
+      document.querySelectorAll('.gallery-grid').forEach(g => g.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      if(tabName === 'shared') {
+        document.getElementById('shared-gallery').classList.add('active');
+        document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+        document.getElementById('upload-ui').style.display = 'block';
+      } else if (tabName === 'static') {
+        document.getElementById('static-gallery').classList.add('active');
+        document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+        document.getElementById('upload-ui').style.display = 'none';
+      }
+    }
+  </script>
+
+  <script>
+    // STANDARD UI SCRIPTS
+    function openLightbox(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.add('active');
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+
+    window.unlockSecret = function(btn) {
+      const pass = prompt("Password: (kita)");
+      if(pass === 'kita') {
+        document.querySelectorAll('.gallery-grid').forEach(g => g.classList.remove('active'));
+        document.getElementById('secret-gallery').classList.add('active');
+        btn.innerHTML = '🔓 Terbuka';
+        document.getElementById('upload-ui').style.display = 'none';
+      }
+    }
+
+    window.sendToWA = function() {
+      const msg = document.getElementById('waMessage').value;
+      const phone = "6285156413049"; // GANTI NOMOR
+      if(msg) window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+  </script>
+</body>
+</html>
